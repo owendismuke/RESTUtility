@@ -195,7 +195,8 @@
 			this.mediaType.FormattingEnabled = true;
 			this.mediaType.Items.AddRange(new object[] {
             "JSON",
-            "XML"});
+            "XML",
+            "RAW"});
 			this.mediaType.Location = new System.Drawing.Point(11, 61);
 			this.mediaType.Name = "mediaType";
 			this.mediaType.Size = new System.Drawing.Size(87, 21);

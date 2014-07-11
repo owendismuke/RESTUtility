@@ -49,6 +49,7 @@ namespace RESTUtility
 					var requestUriText = CleanUri(requestUri.Text);
 					var requestContent = string.IsNullOrWhiteSpace(requestText.Text) ? null : requestText.Text;
 					var xml = mediaType.SelectedItem.ToString().ToLower().Equals("xml");
+					var raw = mediaType.SelectedItem.ToString().ToLower().Equals("raw");
 
 					client.BaseAddress = new Uri(baseUriText);
 					client.DefaultRequestHeaders.Clear();
@@ -62,9 +63,12 @@ namespace RESTUtility
 							break;
 						case "POST":
 							if (!string.IsNullOrWhiteSpace(requestContent))
-								response = xml
-									? await client.PostAsXmlAsync(requestUriText, requestContent)
-									: await client.PostAsJsonAsync(requestUriText, requestContent);
+								if (!raw)
+									response = xml
+										? await client.PostAsXmlAsync(requestUriText, requestContent)
+										: await client.PostAsJsonAsync(requestUriText, requestContent);
+								else
+									response = await client.PostAsync(requestUriText, new StringContent(requestContent));
 							else
 								response = await client.PostAsync(requestUriText, null);
 							break;
@@ -87,7 +91,12 @@ namespace RESTUtility
 					response.EnsureSuccessStatusCode();
 
 					var content = await response.Content.ReadAsStringAsync();
-					responseText.Text = xml ? XDocument.Parse(content).ToString() : JObject.Parse(content).ToString();
+					if (response.Content.Headers.ContentType.MediaType.Equals("text/xml"))
+						responseText.Text = XDocument.Parse(content).ToString();
+					else if (response.Content.Headers.ContentType.MediaType.Equals("application/json"))
+						responseText.Text = JObject.Parse(content).ToString();
+					else
+						responseText.Text = content;
 				}
 			}
 			catch (HttpRequestException hre)
