@@ -1,8 +1,11 @@
 ﻿using System;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
 using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
 
@@ -54,7 +57,8 @@ namespace RESTUtility
 					client.BaseAddress = new Uri(baseUriText);
 					client.DefaultRequestHeaders.Clear();
 					client.DefaultRequestHeaders.Accept.Add(
-						new MediaTypeWithQualityHeaderValue(xml ? "application/xml" : "application/json"));
+						new MediaTypeWithQualityHeaderValue(xml ? "text/xml" : "application/json"));
+
 
 					switch (modeSelect.SelectedItem.ToString().ToUpper())
 					{
@@ -65,8 +69,8 @@ namespace RESTUtility
 							if (!string.IsNullOrWhiteSpace(requestContent))
 								if (!raw)
 									response = xml
-										? await client.PostAsXmlAsync(requestUriText, requestContent)
-										: await client.PostAsJsonAsync(requestUriText, requestContent);
+										? await client.PostAsXmlAsync(requestUriText, XElement.Parse(requestContent))
+										: await client.PostAsJsonAsync(requestUriText, JObject.Parse(requestContent));
 								else
 									response = await client.PostAsync(requestUriText, new StringContent(requestContent));
 							else
@@ -91,8 +95,20 @@ namespace RESTUtility
 					response.EnsureSuccessStatusCode();
 
 					var content = await response.Content.ReadAsStringAsync();
-					if (response.Content.Headers.ContentType.MediaType.Equals("text/xml"))
-						responseText.Text = XDocument.Parse(content).ToString();
+					if (response.Content.Headers.ContentType.MediaType.Equals("application/xml"))
+					{
+						
+						using (var xString = new StringWriter(new StringBuilder()))
+						{
+							using (var xWriter = new XmlTextWriter(xString) {Formatting = Formatting.Indented})
+							{
+								var xDoc = XDocument.Parse(content);
+								xDoc.Save(xWriter);
+							}
+
+							responseText.Text = xString.ToString();
+						}
+					}
 					else if (response.Content.Headers.ContentType.MediaType.Equals("application/json"))
 						responseText.Text = JObject.Parse(content).ToString();
 					else
@@ -116,6 +132,7 @@ namespace RESTUtility
 			uri = uri.Replace("https", "");
 			uri = uri.Replace("http", "");
 			uri = uri.Replace("://", "");
+			uri = uri.Replace(":/", "");
 			uri = uri.Trim('/');
 			uri = uri.Replace("\"", "");
 			uri = uri.Replace("//", "/");
@@ -128,7 +145,7 @@ namespace RESTUtility
 			if (string.IsNullOrWhiteSpace(baseUri.Text))
 				uriDisplay.Text = string.IsNullOrWhiteSpace(requestUri.Text)
 					? "Please enter a Base Uri and Request Uri above"
-					: "Please enter your Base Uri above";
+					: "Please enter a Base Uri above";
 			else
 			{
 				var cleanBase = CleanUri(baseUri.Text);
