@@ -1,13 +1,16 @@
-﻿using System;
+﻿using System.Net.Http.Headers;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
-using Newtonsoft.Json.Linq;
 
 namespace RESTUtility
 {
@@ -16,6 +19,9 @@ namespace RESTUtility
 		public Form1()
 		{
 			InitializeComponent();
+			_contentTypeList = new BindingList<ContentType>();
+			
+			BuildLists();
 			modeSelect.SelectedItem = modeSelect.Items[0];
 			protocol.SelectedItem = protocol.Items[0];
 			mediaType.SelectedItem = mediaType.Items[0];
@@ -23,6 +29,8 @@ namespace RESTUtility
 			requestUri.Clear();
 			requestText.Clear();
 			responseText.Clear();
+			responseStatusCodeLabel.BackColor = DefaultBackColor;
+			headerGrid.DataSource = _headers;
 
 			UpdateUriDisplay(null, null);
 		}
@@ -51,28 +59,31 @@ namespace RESTUtility
 					var baseUriText = string.Format("{0}://{1}/", protocol.SelectedItem, CleanUri(baseUri.Text));
 					var requestUriText = CleanUri(requestUri.Text);
 					var requestContent = string.IsNullOrWhiteSpace(requestText.Text) ? null : requestText.Text;
-					var xml = mediaType.SelectedItem.ToString().ToLower().Equals("xml");
-					var raw = mediaType.SelectedItem.ToString().ToLower().Equals("raw");
+					var xml = mediaType.Text.ToLower().Equals("xml");
 
 					client.BaseAddress = new Uri(baseUriText);
 					client.DefaultRequestHeaders.Clear();
-					client.DefaultRequestHeaders.Accept.Add(
-						new MediaTypeWithQualityHeaderValue(xml ? "text/xml" : "application/json"));
 
+					if (_headers.Count > 0)
+						foreach (var header in _headers)
+						{
+							if (header.Key.ToLower().Equals("content-type"))
+								client.DefaultRequestHeaders.Accept.Add(
+									new MediaTypeWithQualityHeaderValue(header.Value));
+							else
+								client.DefaultRequestHeaders.Add(header.Key, header.Value);
+						}
 
-					switch (modeSelect.SelectedItem.ToString().ToUpper())
+					switch (modeSelect.Text.ToUpper())
 					{
 						case "GET":
 							response = await client.GetAsync(requestUriText);
 							break;
 						case "POST":
 							if (!string.IsNullOrWhiteSpace(requestContent))
-								if (!raw)
-									response = xml
-										? await client.PostAsXmlAsync(requestUriText, XElement.Parse(requestContent))
-										: await client.PostAsJsonAsync(requestUriText, JObject.Parse(requestContent));
-								else
-									response = await client.PostAsync(requestUriText, new StringContent(requestContent));
+								response = xml
+									? await client.PostAsXmlAsync(requestUriText, XElement.Parse(requestContent))
+									: await client.PostAsJsonAsync(requestUriText, JObject.Parse(requestContent));
 							else
 								response = await client.PostAsync(requestUriText, null);
 							break;
@@ -95,12 +106,12 @@ namespace RESTUtility
 					response.EnsureSuccessStatusCode();
 
 					var content = await response.Content.ReadAsStringAsync();
+					responseHeaders.Text = response.Headers.ToString();
+
 					if (response.Content.Headers.ContentType.MediaType.Equals("application/xml"))
-					{
-						
 						using (var xString = new StringWriter(new StringBuilder()))
 						{
-							using (var xWriter = new XmlTextWriter(xString) {Formatting = Formatting.Indented})
+							using (var xWriter = new XmlTextWriter(xString) { Formatting = Formatting.Indented })
 							{
 								var xDoc = XDocument.Parse(content);
 								xDoc.Save(xWriter);
@@ -108,7 +119,6 @@ namespace RESTUtility
 
 							responseText.Text = xString.ToString();
 						}
-					}
 					else if (response.Content.Headers.ContentType.MediaType.Equals("application/json"))
 						responseText.Text = JObject.Parse(content).ToString();
 					else
@@ -154,5 +164,32 @@ namespace RESTUtility
 					cleanRequest);
 			}
 		}
+
+		private void mediaType_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			IList<RequestHeaders> reqHeaders = new List<RequestHeaders>();
+
+			if (_headers != null)
+				foreach (var reqHeader in _headers)
+					if (!reqHeader.Key.ToLower().Equals("content-type"))
+						reqHeaders.Add(reqHeader);
+
+			reqHeaders.Add(new RequestHeaders("Content-Type", mediaType.SelectedValue.ToString()));
+
+			_headers = new BindingList<RequestHeaders>(reqHeaders.OrderBy(h => h.Key).ToList());
+			headerGrid.DataSource = _headers;
+		}
+
+		private void BuildLists()
+		{
+			_contentTypeList.Add(new ContentType { Key = "JSON", Value = "application/json" });
+			_contentTypeList.Add(new ContentType { Key = "XML", Value = "application/xml" });
+			mediaType.DisplayMember = "Key";
+			mediaType.ValueMember = "Value";
+			mediaType.DataSource = _contentTypeList;
+		}
+
+		private BindingList<RequestHeaders> _headers = new BindingList<RequestHeaders>();
+		private readonly BindingList<ContentType> _contentTypeList;
 	}
 }

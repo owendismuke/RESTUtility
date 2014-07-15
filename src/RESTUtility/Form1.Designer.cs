@@ -47,6 +47,12 @@
 			this.label9 = new System.Windows.Forms.Label();
 			this.uriDisplay = new System.Windows.Forms.TextBox();
 			this.label10 = new System.Windows.Forms.Label();
+			this.responseHeaders = new System.Windows.Forms.TextBox();
+			this.headerGrid = new System.Windows.Forms.DataGridView();
+			this.label11 = new System.Windows.Forms.Label();
+			this.responseStatusCodeLabel = new System.Windows.Forms.Label();
+			this.label12 = new System.Windows.Forms.Label();
+			((System.ComponentModel.ISupportInitialize)(this.headerGrid)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// baseUri
@@ -107,29 +113,29 @@
 			this.requestText.Multiline = true;
 			this.requestText.Name = "requestText";
 			this.requestText.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-			this.requestText.Size = new System.Drawing.Size(748, 229);
+			this.requestText.Size = new System.Drawing.Size(382, 229);
 			this.requestText.TabIndex = 5;
 			this.requestText.WordWrap = false;
 			// 
 			// label4
 			// 
 			this.label4.AutoSize = true;
-			this.label4.Location = new System.Drawing.Point(8, 341);
+			this.label4.Location = new System.Drawing.Point(8, 368);
 			this.label4.Name = "label4";
-			this.label4.Size = new System.Drawing.Size(55, 13);
+			this.label4.Size = new System.Drawing.Size(58, 13);
 			this.label4.TabIndex = 0;
-			this.label4.Text = "Response";
+			this.label4.Text = "Response:";
 			// 
 			// responseText
 			// 
 			this.responseText.CausesValidation = false;
 			this.responseText.Cursor = System.Windows.Forms.Cursors.Default;
-			this.responseText.Location = new System.Drawing.Point(11, 357);
+			this.responseText.Location = new System.Drawing.Point(11, 384);
 			this.responseText.Multiline = true;
 			this.responseText.Name = "responseText";
 			this.responseText.ReadOnly = true;
 			this.responseText.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-			this.responseText.Size = new System.Drawing.Size(748, 258);
+			this.responseText.Size = new System.Drawing.Size(382, 258);
 			this.responseText.TabIndex = 0;
 			this.responseText.TabStop = false;
 			this.responseText.WordWrap = false;
@@ -142,7 +148,7 @@
 			this.goButton.Location = new System.Drawing.Point(622, 47);
 			this.goButton.Name = "goButton";
 			this.goButton.Size = new System.Drawing.Size(137, 35);
-			this.goButton.TabIndex = 6;
+			this.goButton.TabIndex = 8;
 			this.goButton.Text = "Go!";
 			this.goButton.UseVisualStyleBackColor = false;
 			this.goButton.MouseClick += new System.Windows.Forms.MouseEventHandler(this.goButton_MouseClick);
@@ -152,9 +158,9 @@
 			this.label5.AutoSize = true;
 			this.label5.Location = new System.Drawing.Point(13, 45);
 			this.label5.Name = "label5";
-			this.label5.Size = new System.Drawing.Size(36, 13);
+			this.label5.Size = new System.Drawing.Size(71, 13);
 			this.label5.TabIndex = 0;
-			this.label5.Text = "Media";
+			this.label5.Text = "Content-Type";
 			// 
 			// protocol
 			// 
@@ -193,14 +199,11 @@
 			this.mediaType.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
 			this.mediaType.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
 			this.mediaType.FormattingEnabled = true;
-			this.mediaType.Items.AddRange(new object[] {
-            "JSON",
-            "XML",
-            "RAW"});
 			this.mediaType.Location = new System.Drawing.Point(11, 61);
 			this.mediaType.Name = "mediaType";
 			this.mediaType.Size = new System.Drawing.Size(87, 21);
 			this.mediaType.TabIndex = 3;
+			this.mediaType.SelectedIndexChanged += new System.EventHandler(this.mediaType_SelectedIndexChanged);
 			// 
 			// label6
 			// 
@@ -250,11 +253,68 @@
 			this.label10.TabIndex = 19;
 			this.label10.Text = "Formatted Uri";
 			// 
+			// responseHeaders
+			// 
+			this.responseHeaders.Location = new System.Drawing.Point(400, 384);
+			this.responseHeaders.Multiline = true;
+			this.responseHeaders.Name = "responseHeaders";
+			this.responseHeaders.ReadOnly = true;
+			this.responseHeaders.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+			this.responseHeaders.Size = new System.Drawing.Size(359, 257);
+			this.responseHeaders.TabIndex = 26;
+			this.responseHeaders.TabStop = false;
+			// 
+			// headerGrid
+			// 
+			this.headerGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+			this.headerGrid.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCellsExceptHeaders;
+			this.headerGrid.BackgroundColor = System.Drawing.SystemColors.ControlLight;
+			this.headerGrid.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+			this.headerGrid.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.Disable;
+			this.headerGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+			this.headerGrid.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnKeystroke;
+			this.headerGrid.Location = new System.Drawing.Point(399, 109);
+			this.headerGrid.Name = "headerGrid";
+			this.headerGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+			this.headerGrid.Size = new System.Drawing.Size(358, 229);
+			this.headerGrid.TabIndex = 6;
+			// 
+			// label11
+			// 
+			this.label11.AutoSize = true;
+			this.label11.Location = new System.Drawing.Point(400, 91);
+			this.label11.Name = "label11";
+			this.label11.Size = new System.Drawing.Size(47, 13);
+			this.label11.TabIndex = 32;
+			this.label11.Text = "Headers";
+			// 
+			// responseStatusCodeLabel
+			// 
+			this.responseStatusCodeLabel.Location = new System.Drawing.Point(73, 368);
+			this.responseStatusCodeLabel.Name = "responseStatusCodeLabel";
+			this.responseStatusCodeLabel.Size = new System.Drawing.Size(100, 13);
+			this.responseStatusCodeLabel.TabIndex = 33;
+			this.responseStatusCodeLabel.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			// 
+			// label12
+			// 
+			this.label12.AutoSize = true;
+			this.label12.Location = new System.Drawing.Point(403, 367);
+			this.label12.Name = "label12";
+			this.label12.Size = new System.Drawing.Size(101, 13);
+			this.label12.TabIndex = 34;
+			this.label12.Text = "Response Headers:";
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(766, 624);
+			this.ClientSize = new System.Drawing.Size(769, 652);
+			this.Controls.Add(this.label12);
+			this.Controls.Add(this.responseStatusCodeLabel);
+			this.Controls.Add(this.label11);
+			this.Controls.Add(this.headerGrid);
+			this.Controls.Add(this.responseHeaders);
 			this.Controls.Add(this.label10);
 			this.Controls.Add(this.uriDisplay);
 			this.Controls.Add(this.label9);
@@ -278,6 +338,7 @@
 			this.MaximizeBox = false;
 			this.Name = "Form1";
 			this.Text = "REST Utility";
+			((System.ComponentModel.ISupportInitialize)(this.headerGrid)).EndInit();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -304,6 +365,11 @@
 		private System.Windows.Forms.Label label9;
 		private System.Windows.Forms.TextBox uriDisplay;
 		private System.Windows.Forms.Label label10;
+		private System.Windows.Forms.TextBox responseHeaders;
+		private System.Windows.Forms.DataGridView headerGrid;
+		private System.Windows.Forms.Label label11;
+		private System.Windows.Forms.Label responseStatusCodeLabel;
+		private System.Windows.Forms.Label label12;
 	}
 }
 
