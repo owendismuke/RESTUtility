@@ -1,26 +1,29 @@
-﻿using System.Net.Http.Headers;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
+using Newtonsoft.Json.Linq;
 
 namespace RESTUtility
 {
 	public partial class Form1 : Form
 	{
+		private readonly BindingList<ContentType> _contentTypeList;
+		private BindingList<RequestHeaders> _headers = new BindingList<RequestHeaders>();
+
 		public Form1()
 		{
 			InitializeComponent();
 			_contentTypeList = new BindingList<ContentType>();
-			
+
 			BuildLists();
 			modeSelect.SelectedItem = modeSelect.Items[0];
 			protocol.SelectedItem = protocol.Items[0];
@@ -103,26 +106,37 @@ namespace RESTUtility
 							break;
 					}
 
-					response.EnsureSuccessStatusCode();
+					if (response.Content == null)
+						response.EnsureSuccessStatusCode();
 
 					var content = await response.Content.ReadAsStringAsync();
 					responseHeaders.Text = response.Headers.ToString();
+					responseHeaders.AppendText(response.Content.Headers.ToString());
 
-					if (response.Content.Headers.ContentType.MediaType.Equals("application/xml"))
-						using (var xString = new StringWriter(new StringBuilder()))
-						{
-							using (var xWriter = new XmlTextWriter(xString) { Formatting = Formatting.Indented })
-							{
-								var xDoc = XDocument.Parse(content);
-								xDoc.Save(xWriter);
-							}
-
-							responseText.Text = xString.ToString();
-						}
-					else if (response.Content.Headers.ContentType.MediaType.Equals("application/json"))
+					try
+					{
 						responseText.Text = JObject.Parse(content).ToString();
-					else
-						responseText.Text = content;
+					}
+					catch
+					{
+						try
+						{
+							using (var xString = new StringWriter(new StringBuilder()))
+							{
+								using (var xWriter = new XmlTextWriter(xString) { Formatting = Formatting.Indented })
+								{
+									var xDoc = XDocument.Parse(content);
+									xDoc.Save(xWriter);
+								}
+
+								responseText.Text = xString.ToString();
+							}
+						}
+						catch
+						{
+							responseText.Text = content;
+						}
+					}
 				}
 			}
 			catch (HttpRequestException hre)
@@ -135,10 +149,16 @@ namespace RESTUtility
 			}
 		}
 
+		private void ParseResponse(string response)
+		{
+
+		}
+
 		private static string CleanUri(string uri)
 		{
 			if (string.IsNullOrWhiteSpace(uri)) return string.Empty;
 
+			uri = uri.Replace(" ", "");
 			uri = uri.Replace("https", "");
 			uri = uri.Replace("http", "");
 			uri = uri.Replace("://", "");
@@ -188,8 +208,5 @@ namespace RESTUtility
 			mediaType.ValueMember = "Value";
 			mediaType.DataSource = _contentTypeList;
 		}
-
-		private BindingList<RequestHeaders> _headers = new BindingList<RequestHeaders>();
-		private readonly BindingList<ContentType> _contentTypeList;
 	}
 }

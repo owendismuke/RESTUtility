@@ -15,7 +15,7 @@ namespace RESTUtility
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		public void RaisePropertyChanged([CallerMemberName] string propertyName = "")
+		private void RaisePropertyChanged([CallerMemberName] string propertyName = "")
 		{
 			var temp = PropertyChanged;
 			if (temp != null)
